@@ -25,8 +25,6 @@ export function readConfig(): Config {
 		const gatorConfigJSON = JSON.parse(gatorConfig) as Config;
 		return gatorConfigJSON;
 	} catch (error) {
-		console.log("There was an error!");
-		console.log(error);
 		throw error;
 	}
 }

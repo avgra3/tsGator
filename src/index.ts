@@ -1,27 +1,36 @@
-import { argv, exit } from "process";
-import { CommandsRegistry, registerCommand, handlerLogin, runCommand } from "./command.js";
+import { argv } from "process";
+import { CommandsRegistry, runCommand, } from "./command.js";
+import { handlerLogin, handlerCreateUser } from "./handlers.js";
 
-function main() {
-	let commandsRegistry: CommandsRegistry = { commands: {} };
-	commandsRegistry = registerCommand(commandsRegistry, "login", handlerLogin);
+async function main() {
+	const commandsRegistry: CommandsRegistry = {
+		commands: {
+			login: handlerLogin,
+			register: handlerCreateUser,
+		}
+	};
+	// for (const key in commandsRegistry.commands) {
+	// 	console.log(`- key: ${key}`);
+	// };
 	const allArgs = argv;
 	const args: string[] = allArgs.slice(3);
 	let command: string = allArgs[2];
+	// console.log(`=> command: ${command}`);
+	// console.log("=> args:");
+	// args.forEach((value, index) => {
+	// 	console.log(`- [${index}] => ${value}`);
+	// });
 	if (typeof command === "undefined") {
-		console.error("ERROR: You must supply a command!");
-		exit(1);
-	}
-	try {
-		runCommand(commandsRegistry, command, args.join(" "));
-	} catch (error: unknown) {
-		if (error instanceof Error) {
-			console.error("ERROR:", error.message);
-		} else {
-			console.error("ERROR: An unknown error occured!", error);
+		console.log("No command supplied. Exiting");
+	} else {
+		try {
+			await runCommand(commandsRegistry, command, args.join(" "));
+		} catch (error) {
+			console.error(error);
+			process.exit(1);
 		}
-		exit(1);
 	}
+	process.exit(0);
 }
-
 
 main();

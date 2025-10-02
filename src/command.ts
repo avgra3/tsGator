@@ -1,6 +1,4 @@
-import { readConfig, setUser } from "./config";
-
-export type CommandHandler = (cmdName: string, ...args: string[]) => void;
+export type CommandHandler = (cmdName: string, ...args: string[]) => Promise<void>;
 export type CommandsRegistry = {
 	commands: Record<string, CommandHandler>;
 };
@@ -12,26 +10,18 @@ export function registerCommand(registry: CommandsRegistry, cmdName: string, han
 }
 
 // Run commands
-export function runCommand(registry: CommandsRegistry, cmdName: string, ...args: string[]) {
+export async function runCommand(registry: CommandsRegistry, cmdName: string, ...args: string[]) {
 	// Run a command if it exists
 	if (cmdName in registry.commands) {
-		registry.commands[cmdName](cmdName, args.join(" "))
-		return
+		try {
+			await registry.commands[cmdName](cmdName, args.join(" "))
+		} catch (error) {
+			throw new Error(`ERROR: Running command "${cmdName}" raised an error.\n${error}`);
+			return
+		}
+	} else {
+		console.log(`WARNING: command "${cmdName} does not exist"`);
 	}
-	console.log(`WARNING: command "${cmdName} does not exist"`);
+
 }
 
-// Handlers
-export function handlerLogin(cmdName: string, ...args: string[]) {
-	if (typeof args === "undefined" || args[0] === "") {
-		throw new Error(`ERROR: ${cmdName} requires a username argument!`);
-	}
-	const currentConfig = readConfig();
-	try {
-		setUser(args[0], currentConfig)
-	} catch (error) {
-		console.log(error);
-		return
-	}
-	console.log("Username has been set!");
-}
