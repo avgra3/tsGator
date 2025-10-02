@@ -1,5 +1,6 @@
 import { readConfig, setUser } from "./config.js";
-import { createUser, getUserByName } from "./lib/db/queries/users.js";
+import { createUser, deleteAllUsers, getAllUsers, getUserByName } from "./lib/db/queries/users.js";
+import { fetchFeed } from "./rss.js";
 
 // Handlers
 export async function handlerLogin(cmdName: string, ...args: string[]) {
@@ -50,8 +51,53 @@ export async function handlerGetUserByName(cmdName: string, ...args: string[]) {
 		const createdUser = await getUserByName(name);
 		return createdUser;
 	} catch (error) {
-		console.error(`ERROR: Occured while trying to select name="${name}"=>`, error);
+		throw new Error(`ERROR: Occured while trying to select name="${name}"`);
 	}
 }
 
+export async function handlerResetUserTable(cmdName: string, ...args: string[]) {
+	try {
+		await deleteAllUsers();
+	} catch (error) {
+		throw new Error(`ERROR: Occured while trying to reset users table.`);
+	}
+}
 
+export async function handlerGetUsers(cmdName: string, ...args: string[]) {
+	try {
+		const currentConfig = readConfig();
+		const loggedInUser = currentConfig.currentUserName;
+		const allUsers = await getAllUsers();
+		allUsers.forEach((value, _) => {
+			let message = `* ${value.name}`;
+			if (value.name === loggedInUser) {
+				message += ` (current)`;
+			}
+			console.log(message);
+		});
+	} catch (error) { throw error; }
+}
+
+export async function handlerAgg(cmdName: string, ...args: string[]) {
+
+	// if (typeof args === "undefined" || args[0] === "") {
+	// 	throw new Error(`ERROR: ${cmdName} requires a RSS URL argument!`);
+	// }
+	// const feedUrl = args[0];
+	const feedUrl = "https://www.wagslane.dev/index.xml";
+	try {
+		const fetchedFeed = await fetchFeed(feedUrl);
+		const channel = fetchedFeed.channel;
+		const items = channel.item;
+		console.log(`Title => ${channel.title}`);
+		console.log(`Link => ${channel.link}`);
+		console.log(`Description => ${channel.description}`);
+		items.forEach((value, _) => {
+			console.log(`title: ${value.title}`);
+			console.log(`- link: ${value.link}`);
+			console.log(`- description: ${value.description}`);
+			console.log(`- pubDate: ${value.pubDate}`);
+			console.log("\n");
+		});
+	} catch (error) { throw error; }
+}

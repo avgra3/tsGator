@@ -22,6 +22,5 @@ export async function runCommand(registry: CommandsRegistry, cmdName: string, ..
 	} else {
 		console.log(`WARNING: command "${cmdName} does not exist"`);
 	}
-
 }
 

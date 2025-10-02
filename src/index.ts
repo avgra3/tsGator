@@ -1,12 +1,15 @@
 import { argv } from "process";
 import { CommandsRegistry, runCommand, } from "./command.js";
-import { handlerLogin, handlerCreateUser } from "./handlers.js";
+import { handlerAgg, handlerLogin, handlerCreateUser, handlerResetUserTable, handlerGetUsers } from "./handlers.js";
 
 async function main() {
 	const commandsRegistry: CommandsRegistry = {
 		commands: {
 			login: handlerLogin,
 			register: handlerCreateUser,
+			reset: handlerResetUserTable,
+			users: handlerGetUsers,
+			agg: handlerAgg,
 		}
 	};
 	// for (const key in commandsRegistry.commands) {
