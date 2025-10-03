@@ -1,6 +1,6 @@
 import { argv } from "process";
 import { CommandsRegistry, runCommand, } from "./command.js";
-import { handlerAgg, handlerLogin, handlerCreateUser, handlerResetUserTable, handlerGetUsers } from "./handlers.js";
+import { handlerAgg, handlerLogin, handlerCreateUser, handlerResetUserTable, handlerGetUsers, handlerAddFeed, handlerListFeeds } from "./handlers.js";
 
 async function main() {
 	const commandsRegistry: CommandsRegistry = {
@@ -10,24 +10,17 @@ async function main() {
 			reset: handlerResetUserTable,
 			users: handlerGetUsers,
 			agg: handlerAgg,
+			addfeed: handlerAddFeed,
+			feeds: handlerListFeeds,
 		}
 	};
-	// for (const key in commandsRegistry.commands) {
-	// 	console.log(`- key: ${key}`);
-	// };
-	const allArgs = argv;
-	const args: string[] = allArgs.slice(3);
-	let command: string = allArgs[2];
-	// console.log(`=> command: ${command}`);
-	// console.log("=> args:");
-	// args.forEach((value, index) => {
-	// 	console.log(`- [${index}] => ${value}`);
-	// });
+	const args: string[] = argv.slice(3);
+	let command: string = argv[2];
 	if (typeof command === "undefined") {
 		console.log("No command supplied. Exiting");
 	} else {
 		try {
-			await runCommand(commandsRegistry, command, args.join(" "));
+			await runCommand(commandsRegistry, command, ...args);
 		} catch (error) {
 			console.error(error);
 			process.exit(1);

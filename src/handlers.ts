@@ -1,6 +1,8 @@
 import { readConfig, setUser } from "./config.js";
-import { createUser, deleteAllUsers, getAllUsers, getUserByName } from "./lib/db/queries/users.js";
+import { createFeed, getFeeds } from "./lib/db/queries/feeds.js";
+import { createUser, deleteAllUsers, getAllUsers, getUserByID, getUserByName, getUsersByIDs } from "./lib/db/queries/users.js";
 import { fetchFeed } from "./rss.js";
+import { printFeed, printFeedUser, User } from "./helpers.js";
 
 // Handlers
 export async function handlerLogin(cmdName: string, ...args: string[]) {
@@ -100,4 +102,35 @@ export async function handlerAgg(cmdName: string, ...args: string[]) {
 			console.log("\n");
 		});
 	} catch (error) { throw error; }
+}
+
+export async function handlerAddFeed(cmdName: string, ...args: string[]) {
+	if (typeof args === "undefined" || args.length < 2) {
+		throw new Error(`ERROR: ${cmdName} requires a "name" and "url" argument!`);
+	}
+	const currentConfig = readConfig();
+	const userName = currentConfig.currentUserName;
+	const user = await getUserByName(userName);
+	const userID = user[0].id;
+	const feedName = args[0];
+	const feedUrl = args[1];
+
+	try {
+		const newFeed = await createFeed(userID, feedName, feedUrl);
+		printFeed(newFeed, user[0]);
+	} catch (error) {
+		throw error;
+	}
+}
+
+export async function handlerListFeeds(cmdName: string, ...args: string[]) {
+	// Name of feed
+	// Url of feed
+	// User who created the feed
+	const feedList = await getFeeds();
+	if (feedList.length > 0) {
+		printFeedUser(feedList);
+	} else {
+		console.log("No feeds!");
+	}
 }

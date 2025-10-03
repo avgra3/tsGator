@@ -14,7 +14,7 @@ export async function runCommand(registry: CommandsRegistry, cmdName: string, ..
 	// Run a command if it exists
 	if (cmdName in registry.commands) {
 		try {
-			await registry.commands[cmdName](cmdName, args.join(" "))
+			await registry.commands[cmdName](cmdName, ...args)
 		} catch (error) {
 			throw new Error(`ERROR: Running command "${cmdName}" raised an error.\n${error}`);
 			return
