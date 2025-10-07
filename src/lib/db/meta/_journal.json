@@ -15,6 +15,20 @@
       "when": 1759862996713,
       "tag": "0001_odd_war_machine",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1759866623620,
+      "tag": "0002_lumpy_catseye",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1759867834804,
+      "tag": "0003_furry_rictor",
+      "breakpoints": true
     }
   ]
 }

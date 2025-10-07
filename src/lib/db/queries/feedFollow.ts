@@ -7,6 +7,7 @@ export async function getFeedFollowsForUser(userID: string) {
 		const allFeedFollows = await db.select({
 			feedName: feeds.name,
 			addedBy: users.name,
+			feedID: feeds.id,
 		}).from(feedFollows).innerJoin(users, eq(feedFollows.user_id, users.id))
 			.innerJoin(feeds, eq(feedFollows.feed_id, feeds.id))
 			.where(eq(users.id, userID));

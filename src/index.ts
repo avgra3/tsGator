@@ -1,6 +1,6 @@
 import { argv } from "process";
-import { CommandsRegistry, registerCommand, registry, runCommand, } from "./command.js";
-import { handlerAgg, handlerLogin, handlerCreateUser, handlerResetUserTable, handlerGetUsers, handlerAddFeed, handlerListFeeds, handlerFollow, handlerFollowing, handlerGetUserByName, handlerDeleteFeedFollow } from "./handlers.js";
+import { registerCommand, registry, runCommand, } from "./command.js";
+import { handlerAgg, handlerLogin, handlerCreateUser, handlerResetUserTable, handlerGetUsers, handlerAddFeed, handlerFollow, handlerFollowing, handlerDeleteFeedFollow, handlerBrowse } from "./handlers.js";
 import { middlewareLoggedIn } from "./middleware.js";
 
 async function main() {
@@ -13,24 +13,17 @@ async function main() {
 	registerCommand(registry, "follow", middlewareLoggedIn(handlerFollow));
 	registerCommand(registry, "following", middlewareLoggedIn(handlerFollowing));
 	registerCommand(registry, "unfollow", middlewareLoggedIn(handlerDeleteFeedFollow));
-	//
-	// const commandsRegistry: CommandsRegistry = {
-	// 	commands: {
-	// 		login: handlerLogin,
-	// 		register: handlerCreateUser,
-	// 		reset: handlerResetUserTable,
-	// 		users: handlerGetUsers,
-	// 		agg: handlerAgg,
-	// 		addfeed: handlerAddFeed,
-	// 		feeds: handlerListFeeds,
-	// 		follow: handlerFollow,
-	// 		following: handlerFollowing,
-	// 	}
-	// };
+	registerCommand(registry, "browse", middlewareLoggedIn(handlerBrowse));
 	const args: string[] = argv.slice(3);
 	let command: string = argv[2];
 	if (typeof command === "undefined") {
 		console.log("No command supplied. Exiting");
+	} else if (command === "help") {
+		console.log("Available commands\n");
+		for (const command in registry.commands) {
+			console.log(`- ${command}`);
+		}
+		console.log();
 	} else {
 		try {
 			await runCommand(registry, command, ...args);

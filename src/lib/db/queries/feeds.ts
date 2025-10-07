@@ -1,6 +1,7 @@
 import { sql, eq } from "drizzle-orm";
 import { db } from "..";
 import { feeds, users } from "../schema";
+import { User } from "src/helpers";
 
 // FEEDS TABLE FUNCTIONS
 export async function createFeed(userID: string, name: string, url: string) {

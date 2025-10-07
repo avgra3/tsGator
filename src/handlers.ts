@@ -1,19 +1,16 @@
 import { readConfig, setUser } from "./config.js";
 import { createFeed, getFeedByUrl, getFeeds } from "./lib/db/queries/feeds.js";
 import { createUser, deleteAllUsers, getAllUsers, getUserByID, getUserByName, getUsersByIDs } from "./lib/db/queries/users.js";
-import { fetchFeed } from "./rss.js";
 import { parseDuration, printFeed, printFeedUser, User } from "./helpers.js";
 import { createFeedFollow, deleteFeedFollow, getFeedFollowsForUser } from "./lib/db/queries/feedFollow.js";
 import { scrapeFeeds } from "./aggregator.js";
+import { getPostsForUser } from "./lib/db/queries/posts.js";
 
 // Handlers
-export async function handlerLogin(cmdName: string, ...args: string[]) {
-	if (typeof args === "undefined" || args[0] === "" || args.length === 0) {
-		throw new Error(`ERROR: ${cmdName} requires a username argument!`);
-	}
+export async function handlerLogin(cmdName: string, userName: string, ...args: string[]) {
 	const currentConfig = readConfig();
 	try {
-		setUser(args[0], currentConfig)
+		setUser(userName, currentConfig)
 	} catch (error) {
 		throw error;
 	}
@@ -25,37 +22,26 @@ export async function handlerLogin(cmdName: string, ...args: string[]) {
 	console.log("Username has been set!");
 }
 
-export async function handlerCreateUser(cmdName: string, ...args: string[]) {
-	if (typeof args === "undefined" || args[0].trim() === "" || args.length === 0) {
-		throw new Error(`ERROR: ${cmdName} requires a username argument!`);
-	}
-	const name = args[0].trim();
-	// console.log(`NAME => ${name}`);
+export async function handlerCreateUser(cmdName: string, userName: string, ...args: string[]) {
 	try {
-		// const createdUser =
-		await createUser(name);
-		// console.log(`Successfully created: ${createdUser.name}`);
+		await createUser(userName);
 	} catch (error) {
 		throw new Error(`ERROR: Occured while trying to insert => ${error}`);
 	}
 	const currentConfig = readConfig();
 	try {
-		setUser(name, currentConfig);
+		setUser(userName, currentConfig);
 	} catch (error) {
 		throw error;
 	}
 }
 
-export async function handlerGetUserByName(cmdName: string, ...args: string[]) {
-	if (typeof args === "undefined" || args[0] === "") {
-		throw new Error(`ERROR: ${cmdName} requires a username argument!`);
-	}
-	const name = args[0];
+export async function handlerGetUserByName(cmdName: string, userName: string, ...args: string[]) {
 	try {
-		const createdUser = await getUserByName(name);
+		const createdUser = await getUserByName(userName);
 		return createdUser;
 	} catch (error) {
-		throw new Error(`ERROR: Occured while trying to select name="${name}"`);
+		throw new Error(`ERROR: Occured while trying to select name="${userName}"`);
 	}
 }
 
@@ -82,6 +68,21 @@ export async function handlerGetUsers(cmdName: string, ...args: string[]) {
 	} catch (error) { throw error; }
 }
 
+export async function handlerBrowse(cmdName: string, user: User, limit: string = "2", ...args: string[]) {
+	try {
+		const limitInteger = parseInt(limit);
+		const posts = await getPostsForUser(user, limitInteger);
+		posts.forEach((value, _) => {
+			console.log("==========================");
+			console.log(value.title);
+			console.log(value.description);
+			console.log(value.publishedAt);
+			console.log(`Read the full article: ${value.url}`);
+		});
+		console.log("==========================");
+	} catch (error) { throw error; }
+}
+
 export async function handlerAgg(cmdName: string, time_between_reqs: string, ...args: string[]) {
 	const duration = parseDuration(time_between_reqs);
 	scrapeFeeds();
@@ -96,64 +97,20 @@ export async function handlerAgg(cmdName: string, time_between_reqs: string, ...
 			resolve();
 		})
 	});
-
-	// if (typeof args === "undefined" || args[0] === "") {
-	// 	throw new Error(`ERROR: ${cmdName} requires a RSS URL argument!`);
-	// }
-	// const feedUrl = args[0];
-	// const feedUrl = "https://www.wagslane.dev/index.xml";
-	// try {
-	// 	const fetchedFeed = await fetchFeed(feedUrl);
-	// 	const channel = fetchedFeed.channel;
-	// 	const items = channel.item;
-	// 	console.log(`Title => ${channel.title}`);
-	// 	console.log(`Link => ${channel.link}`);
-	// 	console.log(`Description => ${channel.description}`);
-	// 	items.forEach((value, _) => {
-	// 		console.log(`title: ${value.title}`);
-	// 		console.log(`- link: ${value.link}`);
-	// 		console.log(`- description: ${value.description}`);
-	// 		console.log(`- pubDate: ${value.pubDate}`);
-	// 		console.log("\n");
-	// 	});
-	// } catch (error) { throw error; }
 }
 
 export async function handlerAddFeed(cmdName: string, user: User, feedName: string, feedUrl: string, ...args: string[]) {
-	// if (typeof args === "undefined" || args.length < 2) {
-	// 	throw new Error(`ERROR: ${cmdName} requires a "feed name" and "url" argument!`);
-	// }
-	// const currentConfig = readConfig();
-	// const userName = currentConfig.currentUserName;
-	// const user = await getUserByName(userName);
-	// const userID = user[0].id;
-	// const userID = user.id;
-	// const feedName = args[0];
-	// const feedUrl = args[1];
-
 	try {
-		// const newFeed = await createFeed(userID, feedName, feedUrl);
-		console.log("did we make it here?");
-
 		const newFeed = await createFeed(user.id, feedName, feedUrl);
-		// printFeed(newFeed, user[0]);
-		// printFeed(newFeed, user);
-
 		const feedID = newFeed.id;
-		// const newFeedFollow = await createFeedFollow(userID, feedID);
-		const newFeedFollow = await createFeedFollow(user.id, feedID);
-		// printFeed(newFeed, user[0]);
+		await createFeedFollow(user.id, feedID);
 		printFeed(newFeed, user);
-
 	} catch (error) {
 		throw error;
 	}
 }
 
 export async function handlerListFeeds(cmdName: string, ...args: string[]) {
-	// Name of feed
-	// Url of feed
-	// User who created the feed
 	const feedList = await getFeeds();
 	if (feedList.length > 0) {
 		printFeedUser(feedList);
@@ -163,25 +120,17 @@ export async function handlerListFeeds(cmdName: string, ...args: string[]) {
 }
 
 export async function handlerFollow(cmdName: string, user: User, feedUrl: string, ...args: string[]) {
-	// const url = args[0];
-	// const currentConfig = readConfig();
-	// const currentUser = await getUserByName(currentConfig.currentUserName);
-	// const feedInfo = await getFeedByUrl(url);
 	const feedInfo = await getFeedByUrl(feedUrl);
 	if (typeof feedInfo === "undefined") {
 		throw new Error(`Url provided (${feedUrl}) is not in feeds`);
 	}
 	try {
-		// const createdFeedFollow = await createFeedFollow(currentUser[0].id, feedInfo.id);
 		const createdFeedFollow = await createFeedFollow(user.id, feedInfo.id);
 		console.log(`Feed: ${createdFeedFollow.feedName} by user ${createdFeedFollow.userName}`);
 	} catch (error) { throw error; }
 }
 
 export async function handlerFollowing(cmdName: string, user: User, ...args: string[]) {
-	// const currentConfig = readConfig();
-	// const currentUser = await getUserByName(currentConfig.currentUserName);
-	// const followedFeeds = await getFeedFollowsForUser(currentUser[0].id);
 	const followedFeeds = await getFeedFollowsForUser(user.id);
 	followedFeeds.forEach((value, _) => {
 		console.log("========================");
@@ -192,7 +141,6 @@ export async function handlerFollowing(cmdName: string, user: User, ...args: str
 }
 
 export async function handlerDeleteFeedFollow(cmdName: string, user: User, feedUrl: string, ...args: string[]) {
-	// Get feed ID by url
 	const feed = await getFeedByUrl(feedUrl);
 	if (typeof feed === "undefined") {
 		throw new Error(`The feed "${feedUrl}" does not exist!`);
@@ -207,3 +155,4 @@ export async function handlerDeleteFeedFollow(cmdName: string, user: User, feedU
 		});
 	} catch (error) { throw error; }
 }
+
