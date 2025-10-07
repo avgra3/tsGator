@@ -3,7 +3,7 @@ import { createFeed, getFeedByUrl, getFeeds } from "./lib/db/queries/feeds.js";
 import { createUser, deleteAllUsers, getAllUsers, getUserByID, getUserByName, getUsersByIDs } from "./lib/db/queries/users.js";
 import { fetchFeed } from "./rss.js";
 import { printFeed, printFeedUser, User } from "./helpers.js";
-import { createFeedFollow, getFeedFollowsForUser } from "./lib/db/queries/feedFollow.js";
+import { createFeedFollow, deleteFeedFollow, getFeedFollowsForUser } from "./lib/db/queries/feedFollow.js";
 
 // Handlers
 export async function handlerLogin(cmdName: string, ...args: string[]) {
@@ -175,4 +175,21 @@ export async function handlerFollowing(cmdName: string, user: User, ...args: str
 		console.log(`Added by: ${value.addedBy}`);
 	});
 	console.log("========================");
+}
+
+export async function handlerDeleteFeedFollow(cmdName: string, user: User, feedUrl: string, ...args: string[]) {
+	// Get feed ID by url
+	const feed = await getFeedByUrl(feedUrl);
+	if (typeof feed === "undefined") {
+		throw new Error(`The feed "${feedUrl}" does not exist!`);
+	}
+	if (feed.user_id !== user.id) {
+		throw new Error(`You do not have permission to delete someone else's feed!`)
+	}
+	try {
+		const deleted = await deleteFeedFollow(user.id, feed.id);
+		deleted.forEach((value, _) => {
+			console.log(`Deleted feed => ${value.id}`);
+		});
+	} catch (error) { throw error; }
 }
