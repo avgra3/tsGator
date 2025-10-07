@@ -1,6 +1,6 @@
 import { argv } from "process";
 import { CommandsRegistry, runCommand, } from "./command.js";
-import { handlerAgg, handlerLogin, handlerCreateUser, handlerResetUserTable, handlerGetUsers, handlerAddFeed, handlerListFeeds } from "./handlers.js";
+import { handlerAgg, handlerLogin, handlerCreateUser, handlerResetUserTable, handlerGetUsers, handlerAddFeed, handlerListFeeds, handlerFollow, handlerFollowing } from "./handlers.js";
 
 async function main() {
 	const commandsRegistry: CommandsRegistry = {
@@ -12,6 +12,8 @@ async function main() {
 			agg: handlerAgg,
 			addfeed: handlerAddFeed,
 			feeds: handlerListFeeds,
+			follow: handlerFollow,
+			following: handlerFollowing,
 		}
 	};
 	const args: string[] = argv.slice(3);

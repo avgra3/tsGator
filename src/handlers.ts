@@ -1,8 +1,9 @@
 import { readConfig, setUser } from "./config.js";
-import { createFeed, getFeeds } from "./lib/db/queries/feeds.js";
+import { createFeed, getFeedByUrl, getFeeds } from "./lib/db/queries/feeds.js";
 import { createUser, deleteAllUsers, getAllUsers, getUserByID, getUserByName, getUsersByIDs } from "./lib/db/queries/users.js";
 import { fetchFeed } from "./rss.js";
 import { printFeed, printFeedUser, User } from "./helpers.js";
+import { createFeedFollow, getFeedFollowsForUser } from "./lib/db/queries/feedFollow.js";
 
 // Handlers
 export async function handlerLogin(cmdName: string, ...args: string[]) {
@@ -118,6 +119,10 @@ export async function handlerAddFeed(cmdName: string, ...args: string[]) {
 	try {
 		const newFeed = await createFeed(userID, feedName, feedUrl);
 		printFeed(newFeed, user[0]);
+		const feedID = newFeed.id;
+		const newFeedFollow = await createFeedFollow(userID, feedID);
+		printFeed(newFeed, user[0]);
+
 	} catch (error) {
 		throw error;
 	}
@@ -133,4 +138,30 @@ export async function handlerListFeeds(cmdName: string, ...args: string[]) {
 	} else {
 		console.log("No feeds!");
 	}
+}
+
+export async function handlerFollow(cmdName: string, ...args: string[]) {
+	if (args.length < 1) {
+		throw new Error(`Follow command takes a "url" argument and none was supplied.`);
+	}
+	const url = args[0];
+	const currentConfig = readConfig();
+	const currentUser = await getUserByName(currentConfig.currentUserName);
+	const feedInfo = await getFeedByUrl(url);
+	try {
+		const createdFeedFollow = await createFeedFollow(currentUser[0].id, feedInfo.id);
+		console.log(`Feed: ${createdFeedFollow.feedName} by user ${createdFeedFollow.userName}`);
+	} catch (error) { throw error; }
+}
+
+export async function handlerFollowing(cmdName: string, ...args: string[]) {
+	const currentConfig = readConfig();
+	const currentUser = await getUserByName(currentConfig.currentUserName);
+	const followedFeeds = await getFeedFollowsForUser(currentUser[0].id);
+	followedFeeds.forEach((value, _) => {
+		console.log("========================");
+		console.log(`Feed: ${value.feedName}`);
+		console.log(`Added by: ${value.addedBy}`);
+	});
+	console.log("========================");
 }

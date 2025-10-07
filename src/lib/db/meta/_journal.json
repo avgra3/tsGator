@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1759351934714,
-      "tag": "0000_nasty_sharon_carter",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1759511453209,
-      "tag": "0001_common_natasha_romanoff",
+      "when": 1759817102273,
+      "tag": "0000_new_karma",
       "breakpoints": true
     }
   ]
