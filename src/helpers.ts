@@ -1,3 +1,4 @@
+import { duration } from "drizzle-orm/gel-core";
 import { feeds, users } from "./lib/db/schema";
 
 // feeds is the table object in schema.ts
@@ -34,4 +35,30 @@ export function printFeedUser(feedUser: FeedUser[]) {
 		console.log(`added by: ${value.userName}`);
 	});
 	console.log(lineSep);
+}
+
+export function parseDuration(durationStr: string): number {
+	try {
+		const regex = /^(\d+)(ms|s|m|h)$/;
+		const match = durationStr.match(regex);
+		if (!match) {
+			throw new Error(`duration string "${durationStr}" is invalid!`);
+		}
+		console.log(`Collecting feeds every ${durationStr}`);
+		// Convert to milliseconds
+		if (durationStr.endsWith("s")) {
+			return parseInt(match.join("")) * 1000;
+		}
+		if (durationStr.endsWith("m")) {
+			return parseInt(match.join("")) * 1000 * 60;
+		}
+		if (durationStr.endsWith("h")) {
+			return parseInt(match.join("")) * 1000 * 60 * 60;
+		}
+		// We will assume if not above then it's in ms
+		return parseInt(match.join(""));
+	} catch (error) {
+		console.log(`Failed trying to get duration`);
+		throw error;
+	}
 }

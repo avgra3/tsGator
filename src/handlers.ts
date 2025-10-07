@@ -2,8 +2,9 @@ import { readConfig, setUser } from "./config.js";
 import { createFeed, getFeedByUrl, getFeeds } from "./lib/db/queries/feeds.js";
 import { createUser, deleteAllUsers, getAllUsers, getUserByID, getUserByName, getUsersByIDs } from "./lib/db/queries/users.js";
 import { fetchFeed } from "./rss.js";
-import { printFeed, printFeedUser, User } from "./helpers.js";
+import { parseDuration, printFeed, printFeedUser, User } from "./helpers.js";
 import { createFeedFollow, deleteFeedFollow, getFeedFollowsForUser } from "./lib/db/queries/feedFollow.js";
+import { scrapeFeeds } from "./aggregator.js";
 
 // Handlers
 export async function handlerLogin(cmdName: string, ...args: string[]) {
@@ -81,28 +82,41 @@ export async function handlerGetUsers(cmdName: string, ...args: string[]) {
 	} catch (error) { throw error; }
 }
 
-export async function handlerAgg(cmdName: string, ...args: string[]) {
+export async function handlerAgg(cmdName: string, time_between_reqs: string, ...args: string[]) {
+	const duration = parseDuration(time_between_reqs);
+	scrapeFeeds();
+	console.log(`duration => ${duration}`);
+	const interval = setInterval(() => {
+		scrapeFeeds();
+	}, duration);
+	await new Promise<void>((resolve) => {
+		process.on("SIGINT", () => {
+			console.log("Shutting down feed aggregator...");
+			clearInterval(interval);
+			resolve();
+		})
+	});
 
 	// if (typeof args === "undefined" || args[0] === "") {
 	// 	throw new Error(`ERROR: ${cmdName} requires a RSS URL argument!`);
 	// }
 	// const feedUrl = args[0];
-	const feedUrl = "https://www.wagslane.dev/index.xml";
-	try {
-		const fetchedFeed = await fetchFeed(feedUrl);
-		const channel = fetchedFeed.channel;
-		const items = channel.item;
-		console.log(`Title => ${channel.title}`);
-		console.log(`Link => ${channel.link}`);
-		console.log(`Description => ${channel.description}`);
-		items.forEach((value, _) => {
-			console.log(`title: ${value.title}`);
-			console.log(`- link: ${value.link}`);
-			console.log(`- description: ${value.description}`);
-			console.log(`- pubDate: ${value.pubDate}`);
-			console.log("\n");
-		});
-	} catch (error) { throw error; }
+	// const feedUrl = "https://www.wagslane.dev/index.xml";
+	// try {
+	// 	const fetchedFeed = await fetchFeed(feedUrl);
+	// 	const channel = fetchedFeed.channel;
+	// 	const items = channel.item;
+	// 	console.log(`Title => ${channel.title}`);
+	// 	console.log(`Link => ${channel.link}`);
+	// 	console.log(`Description => ${channel.description}`);
+	// 	items.forEach((value, _) => {
+	// 		console.log(`title: ${value.title}`);
+	// 		console.log(`- link: ${value.link}`);
+	// 		console.log(`- description: ${value.description}`);
+	// 		console.log(`- pubDate: ${value.pubDate}`);
+	// 		console.log("\n");
+	// 	});
+	// } catch (error) { throw error; }
 }
 
 export async function handlerAddFeed(cmdName: string, user: User, feedName: string, feedUrl: string, ...args: string[]) {
