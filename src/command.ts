@@ -1,3 +1,5 @@
+import { register } from "module";
+
 export type CommandHandler = (cmdName: string, ...args: string[]) => Promise<void>;
 export type CommandsRegistry = {
 	commands: Record<string, CommandHandler>;
@@ -8,6 +10,11 @@ export function registerCommand(registry: CommandsRegistry, cmdName: string, han
 	registry.commands[cmdName] = handler;
 	return registry;
 }
+
+// Add commands
+export const registry: CommandsRegistry = {
+	commands: {}
+};
 
 // Run commands
 export async function runCommand(registry: CommandsRegistry, cmdName: string, ...args: string[]) {

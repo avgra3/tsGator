@@ -105,23 +105,31 @@ export async function handlerAgg(cmdName: string, ...args: string[]) {
 	} catch (error) { throw error; }
 }
 
-export async function handlerAddFeed(cmdName: string, ...args: string[]) {
-	if (typeof args === "undefined" || args.length < 2) {
-		throw new Error(`ERROR: ${cmdName} requires a "name" and "url" argument!`);
-	}
-	const currentConfig = readConfig();
-	const userName = currentConfig.currentUserName;
-	const user = await getUserByName(userName);
-	const userID = user[0].id;
-	const feedName = args[0];
-	const feedUrl = args[1];
+export async function handlerAddFeed(cmdName: string, user: User, feedName: string, feedUrl: string, ...args: string[]) {
+	// if (typeof args === "undefined" || args.length < 2) {
+	// 	throw new Error(`ERROR: ${cmdName} requires a "feed name" and "url" argument!`);
+	// }
+	// const currentConfig = readConfig();
+	// const userName = currentConfig.currentUserName;
+	// const user = await getUserByName(userName);
+	// const userID = user[0].id;
+	// const userID = user.id;
+	// const feedName = args[0];
+	// const feedUrl = args[1];
 
 	try {
-		const newFeed = await createFeed(userID, feedName, feedUrl);
-		printFeed(newFeed, user[0]);
+		// const newFeed = await createFeed(userID, feedName, feedUrl);
+		console.log("did we make it here?");
+
+		const newFeed = await createFeed(user.id, feedName, feedUrl);
+		// printFeed(newFeed, user[0]);
+		// printFeed(newFeed, user);
+
 		const feedID = newFeed.id;
-		const newFeedFollow = await createFeedFollow(userID, feedID);
-		printFeed(newFeed, user[0]);
+		// const newFeedFollow = await createFeedFollow(userID, feedID);
+		const newFeedFollow = await createFeedFollow(user.id, feedID);
+		// printFeed(newFeed, user[0]);
+		printFeed(newFeed, user);
 
 	} catch (error) {
 		throw error;
@@ -140,24 +148,27 @@ export async function handlerListFeeds(cmdName: string, ...args: string[]) {
 	}
 }
 
-export async function handlerFollow(cmdName: string, ...args: string[]) {
-	if (args.length < 1) {
-		throw new Error(`Follow command takes a "url" argument and none was supplied.`);
+export async function handlerFollow(cmdName: string, user: User, feedUrl: string, ...args: string[]) {
+	// const url = args[0];
+	// const currentConfig = readConfig();
+	// const currentUser = await getUserByName(currentConfig.currentUserName);
+	// const feedInfo = await getFeedByUrl(url);
+	const feedInfo = await getFeedByUrl(feedUrl);
+	if (typeof feedInfo === "undefined") {
+		throw new Error(`Url provided (${feedUrl}) is not in feeds`);
 	}
-	const url = args[0];
-	const currentConfig = readConfig();
-	const currentUser = await getUserByName(currentConfig.currentUserName);
-	const feedInfo = await getFeedByUrl(url);
 	try {
-		const createdFeedFollow = await createFeedFollow(currentUser[0].id, feedInfo.id);
+		// const createdFeedFollow = await createFeedFollow(currentUser[0].id, feedInfo.id);
+		const createdFeedFollow = await createFeedFollow(user.id, feedInfo.id);
 		console.log(`Feed: ${createdFeedFollow.feedName} by user ${createdFeedFollow.userName}`);
 	} catch (error) { throw error; }
 }
 
-export async function handlerFollowing(cmdName: string, ...args: string[]) {
-	const currentConfig = readConfig();
-	const currentUser = await getUserByName(currentConfig.currentUserName);
-	const followedFeeds = await getFeedFollowsForUser(currentUser[0].id);
+export async function handlerFollowing(cmdName: string, user: User, ...args: string[]) {
+	// const currentConfig = readConfig();
+	// const currentUser = await getUserByName(currentConfig.currentUserName);
+	// const followedFeeds = await getFeedFollowsForUser(currentUser[0].id);
+	const followedFeeds = await getFeedFollowsForUser(user.id);
 	followedFeeds.forEach((value, _) => {
 		console.log("========================");
 		console.log(`Feed: ${value.feedName}`);
